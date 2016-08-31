@@ -4,12 +4,32 @@
 	<title>Messages</title>
 </head>
 <body>
-	<div id="message-area">Text</div>
+	<div id='message-area'>
+		<% for (var i = 0; i < allMessages.length; i++) { %>
+			<p> <%= allMessages[i] %> </p>
+		<% } %>
+	</div>
 
-	<form action="send-message">
-		<input type='text'>
-		<input type='submit' value="Submit">
-	</form>
+	<input id='message-field' type='text' name='message'>
+	<input id='send-button' type='submit' value='Send'>
+	
+	<script src='/socket.io/socket.io.js'></script>
+	<script>
+  		var socket = io.connect('https://glacial-citadel-99088.herokuapp.com');
+	
+		document.getElementById('send-button').onclick = function() {
+	  		var message = document.getElementById('message-field').value;
+	  		socket.emit('send-message', {'message': message});
+	  	}
+
+	  	socket.on('update-message-area', function(data) {
+	  		var newMessage = data.message;
+	  		var paragraphTag = document.createElement('p');
+	  		var textNode = document.createTextNode(newMessage);
+	  		paragraphTag.appendChild(textNode);
+	  		document.getElementById('message-area').appendChild(paragraphTag);
+	  	});
+	</script>
 </body>
 </html>
 
