@@ -52,23 +52,9 @@ app.get('/', function (req, res) {
   	});
 });
 
-// app.post('/send-message', function(req, res) {
-// 	var message = req.body.message;
-	
-// 	pool.getConnection(function(err, connection) {
-// 		connection.query('INSERT INTO messages (message) VALUES ("' + message + '")  ;', function(err, rows) {
-			
-// 			if (err) {
-// 				console.log(err);
-// 			} else {
-// 				console.log(rows);
-// 			}
-			
-// 			connection.release();
-// 			res.redirect('/');
-// 		});
-// 	});
-// });
+app.get('/register', function(req, res) {
+	res.render('register');
+});
 
 io.on('connection', function(socket){
 	
