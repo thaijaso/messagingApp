@@ -91,6 +91,16 @@ app.post('/register', function(req,res) {
 
 });
 
+app.get('/login', function(req, res) {
+	res.render('login');
+
+});
+
+app.post('/login', function(req,res) {
+	console.log("username: " + req.body.username);
+	console.log("password: " + req.body.password);
+
+});
 io.on('connection', function(socket){
 	
 	socket.on('send-message', function(data) {
