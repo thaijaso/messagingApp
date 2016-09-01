@@ -56,7 +56,13 @@ app.get('/register', function(req, res) {
 	res.render('register');
 });
 
+app.post('/register', function(req, res) {
+	console.log(req);
+});
+
 io.on('connection', function(socket){
+
+	console.log('client connected');
 	
 	socket.on('send-message', function(data) {
 	    var message = data.message;
