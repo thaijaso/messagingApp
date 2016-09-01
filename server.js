@@ -20,7 +20,11 @@ app.set('port', process.env.PORT || 8888);
 app.use('/public', require('express').static(path.join(__dirname + '/public')));
 
 //middleware for passing data bewteen routes
-app.use(bodyParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// app.use(bodyParser.json({ type: 'application/vnd.api+json' }))
+
 
 server.listen(app.get('port'), function() {
 	console.log('listening on port:', app.get('port'));
@@ -56,8 +60,34 @@ app.get('/register', function(req, res) {
 	res.render('register');
 });
 
-app.post('/register', function(req, res) {
-	console.log(req);
+
+app.post('/register', function(req,res) {
+	console.log("username: " + req.body.username);
+	console.log("password: " + req.body.password);
+	var username = req.body.username;
+	var password = req.body.password;
+	pool.getConnection(function(err,connection) {
+		connection.query("INSERT INTO users (username, password) VALUES ('" + username + "'" + "," + "'" + password + "'" + ")", function(err, rows) {
+			if(err) {
+				console.log(err);
+			} else {
+				console.log(rows);
+			}
+		});
+	});
+});
+
+
+
+app.get('/login', function(req, res) {
+	res.render('login');
+
+});
+
+app.post('/login', function(req,res) {
+	console.log("username: " + req.body.username);
+	console.log("password: " + req.body.password);
+
 });
 
 io.on('connection', function(socket){
