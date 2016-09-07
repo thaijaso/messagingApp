@@ -92,7 +92,7 @@ app.post('/login', function(req,res) {
 //Get messages between two users
 app.get('/messages/:senderId/:recieverId', function(req, res) {
 	pool.getConnection(function(err, connection) {
-		connection.query("SELECT * FROM users JOIN users_has_messages ON users.id = users_has_messages.user_id JOIN messages ON messages.id = users_has_messages.message_id WHERE users.id = senderId AND users_has_messages.recipient_id = recieverId  OR (users.id = 12 AND users_has_messages.recipient_id = 2) ORDER by created_at ASC;", function(err, rows) {
+		connection.query("SELECT * FROM users JOIN users_has_messages ON users.id = users_has_messages.user_id JOIN messages ON messages.id = users_has_messages.message_id WHERE (users.id = " + req.params.senderId + " AND users_has_messages.recipient_id = " + req.params.recieverId + ") OR (users.id = " + req.params.recieverId + " AND users_has_messages.recipient_id = " + req.params.senderId + ") ORDER BY created_at ASC;", function(err, rows) {
 			if (err) {
 				console.log(err);
 			} else {
