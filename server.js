@@ -24,9 +24,6 @@ app.use('/public', require('express').static(path.join(__dirname + '/public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// app.use(bodyParser.json({ type: 'application/vnd.api+json' }))
-
-
 server.listen(app.get('port'), function() {
 	console.log('listening on port:', app.get('port'));
 });
@@ -69,11 +66,12 @@ app.post('/register', function(req,res) {
 	var password = req.body.password;
 	pool.getConnection(function(err,connection) {
 		connection.query("INSERT INTO users (username, password) VALUES ('" + username + "'" + "," + "'" + password + "'" + ")", function(err, rows) {
-			if(err) {
+			if (err) {
 				console.log(err);
 			} else {
 				console.log(rows);
 			}
+			connection.release();
 		});
 	});
 });
@@ -90,6 +88,30 @@ app.post('/login', function(req,res) {
 	console.log("password: " + req.body.password);
 
 });
+
+//Get messages between two users
+//app.get('/messages/:senderId/:recieverId', function(req, res) {
+	//res.send(req.params);
+// 	pool.getConnection(function(err, connection) {
+// 		connection.query("", function(err, rows) {
+// 			if (err) {
+// 				console.log(err);
+// 			} else {
+// 				console.log(rows);
+// 			}
+			
+// 			connection.release();
+			
+// 			var messages = [];
+			
+// 			for (var i = 0; i < rows.length; i++) {
+// 				messages.push(rows[i]);
+// 			}
+
+// 			res.send({'messages': messages});	
+// 		});
+// 	});
+// });
 
 io.on('connection', function(socket){
 
