@@ -1,6 +1,7 @@
 var app = require('express')();
 var path = require('path');
 var mysql = require('mysql');
+var moment = require('moment');
 var bodyParser = require('body-parser');
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
@@ -98,7 +99,7 @@ io.on('connection', function(socket){
 	    var message = data.message;
 
 	    pool.getConnection(function(err, connection) {
-			connection.query('INSERT INTO messages (message) VALUES ("' + message + '")  ;', function(err, rows) {
+			connection.query("INSERT INTO messages (message, created_at) VALUES (" + "'" + message + "'" + ", " + "'" + moment().format('YYYY-MM-DD HH:mm:ss') + "'" + ")  ;", function(err, rows) {
 				
 				if (err) {
 					console.log(err);
