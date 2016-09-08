@@ -1,5 +1,6 @@
 var app = require('express')();
 var path = require('path');
+var session = require('express-session');
 var mysql = require('mysql');
 var moment = require('moment');
 var bodyParser = require('body-parser');
@@ -23,6 +24,14 @@ app.use('/public', require('express').static(path.join(__dirname + '/public')));
 //middleware for passing data bewteen routes
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+//use session middleware
+app.use(session({
+	secret: 'keyboard cat', 
+	cookie: {maxAge: 60000},
+	resave: true,
+	saveUninitialized: false
+}));
 
 server.listen(app.get('port'), function() {
 	console.log('listening on port:', app.get('port'));
@@ -80,13 +89,37 @@ app.post('/register', function(req,res) {
 
 app.get('/login', function(req, res) {
 	res.render('login');
-
 });
 
 app.post('/login', function(req,res) {
-	console.log("username: " + req.body.username);
-	console.log("password: " + req.body.password);
+	var username = req.body.username;
+	var password = req.body.password;
+	
+	pool.getConnection(function(err, connection) {
+		connection.query("SELECT * FROM users WHERE users.username = " + "'" + username + "'" + "AND users.password = " + "'" + password + "'", function(err, rows) {
+			if (err) {
+				console.log(err);
+			} else {
+				console.log(rows);
+			}
 
+			//user found
+			if (rows.length) {
+				console.log('user found');
+				req.session.userId = rows[0].id;
+				console.log(req.session.userId);
+				res.redirect('/contacts');
+			} else {
+				console.log('user not found');
+				res.send('error user not found');
+			}
+
+		});
+	});
+});
+
+app.get('/contacts', function(req, res) {
+	res.render('contacts');
 });
 
 //Get messages between two users
@@ -110,6 +143,12 @@ app.get('/messages/:senderId/:recieverId', function(req, res) {
 			res.send({'messages': messages});	
 		});
 	});
+});
+
+//Send message from user to another
+app.post('/send-message/:senderId/:reciverId', function(req, res) {
+	console.log(req);
+	res.end();
 });
 
 io.on('connection', function(socket){
