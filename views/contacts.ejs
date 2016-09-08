@@ -1,1 +1,3 @@
-this is contacts page
+<% for (var i = 0; i < users.length; i++)  { %>
+	<p><a href="/messages/<%= userId %>/<%=users[i].id%>"> <%= users[i].username %> </a></p>
+<% } %>
