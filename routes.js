@@ -1,5 +1,6 @@
 var express = require('express');
 var mysql = require('mysql');
+var moment = require('moment');
 
 var pool = mysql.createPool({
   	host     : 'us-cdbr-iron-east-04.cleardb.net',
@@ -137,6 +138,9 @@ module.exports = (function() {
 
 	//Send message from user to another
 	router.post('/send-message/:senderId/:reciverId', function(req, res) {
+		var message = req.body.message; 
+		var userId = req.body.userId; 
+		var recipientId = req.body.recipientId;
 		//TODO: Query the db to insert a message. Will require 2 inserts. 
 		//QUERIES BELOW: 
 			//INSERT INTO messages (message, created_at)
@@ -144,7 +148,27 @@ module.exports = (function() {
 
 			// INSERT INTO users_has_messages (user_id, message_id, recipient_id)
 			// VALUES (2, last_insert_id(), 12);	
-		console.log(req);
+
+			//"INSERT INTO users (username, password) VALUES ('" + username + "'" + "," + "'" + password + "'" + ")", function(err, rows) {
+			pool.getConnection(function(err,connection) {	
+
+				connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
+					if (err) {
+						console.log(err);
+					} else {
+						console.log(rows);
+					}
+				});	
+
+				connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + userId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
+					if (err) {
+						console.log(err);
+					} else {
+						console.log(rows);
+					}
+				});
+			connection.release();	
+			});		
 		res.end();
 	});
 
