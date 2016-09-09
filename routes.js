@@ -136,7 +136,8 @@ module.exports = (function() {
 						messages.push(rows[i]);
 					}
 
-					res.render('messages', {'messages': messages, 'userId': req.session.userId});	
+					res.render('messages', {'messages': messages, 
+						'userId': req.session.userId, 'recipientId': req.params.recieverId});	
 				});
 			});
 		} else {

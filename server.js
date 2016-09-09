@@ -56,11 +56,12 @@ io.on('connection', function(socket) {
 	socket.on('sendUserId', function(data) {
 		var userId = data.userId
 
-		//Iterate through the connected sockets object looking for matching socket id socket parameter
+		//Iterate through the connected sockets object looking for matching socket IDs
 		for (socketId in currentConnections) {
 			if (socketId == socket.id) {
 				console.log('found');
-				//set the userId in the connections Object
+				//set the userId in the connections Object to the userId 
+				//passed in from the clients socket
 				currentConnections[socketId].userId = userId;
 			}
 		}
@@ -68,21 +69,49 @@ io.on('connection', function(socket) {
 	
 	socket.on('sendMessage', function(data) {
 	    var message = data.message;
+	    var userId = data.userId;
+	    var recipientId = data.recipientId;
 
-	 //    pool.getConnection(function(err, connection) {
-		// 	connection.query("INSERT INTO messages (message, created_at) VALUES (" + "'" + message + "'" + ", " + "'" + moment().format('YYYY-MM-DD HH:mm:ss') + "'" + ")  ;", function(err, rows) {
-				
-		// 		if (err) {
-		// 			console.log(err);
-		// 		} else {
-		// 			console.log(rows);
-		// 		}
-				
-		// 		connection.release();
+	    console.log('senderId: ' + userId);
+	    console.log('recipientId: ' + recipientId);
 
-		// 		io.emit('update-message-area', {'message': message});
-		// 	});
-		// });
+	    var senderSocketId = socket.id;
+	    var recipientSocketId;
+
+	    pool.getConnection(function(err,connection) {	
+			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Sucess querying messages');
+
+					connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + userId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
+						if (err) {
+							console.log(err);
+						} else {
+							console.log('Success querying users_has_messages');
+						}
+
+						//update sender page
+				    	io.to(socket.id).emit('updateMessageArea', {'message': message});
+
+						for (socketId in currentConnections) {
+							console.log(socketId);
+							
+							if (currentConnections[socketId].userId == recipientId) {
+								console.log('recipient is online');
+								recipientSocketId = socketId;
+								console.log(senderSocketId);
+								console.log(recipientSocketId);
+								//update recipient page
+								io.to(socketId).emit('updateMessageArea', {'message': message});
+							}
+						}
+						connection.release();	
+					});
+				}
+			});	
+		});		
 	});
   	
   	socket.on('disconnect', function(){

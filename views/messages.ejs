@@ -21,10 +21,11 @@
 	
 		document.getElementById('send-button').onclick = function() {
 	  		var message = document.getElementById('message-field').value;
-	  		socket.emit('sendMessage', {'message': message});
+	  		socket.emit('sendMessage', {'message': message, 'userId': <%= userId %>, 
+	  			'recipientId': <%= recipientId %>});
 	  	}
 
-	  	socket.on('update-message-area', function(data) {
+	  	socket.on('updateMessageArea', function(data) {
 	  		var newMessage = data.message;
 	  		var paragraphTag = document.createElement('p');
 	  		var textNode = document.createTextNode(newMessage);
