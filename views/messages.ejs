@@ -15,7 +15,7 @@
 	
 	<script src='/socket.io/socket.io.js'></script>
 	<script>
-  		var socket = io.connect('http://localhost:8888');
+  		var socket = io.connect('https://glacial-citadel-99088.herokuapp.com');
 
   		socket.emit('sendUserId', {'userId': <%= userId %>});
 	
