@@ -42,10 +42,8 @@ server.listen(app.get('port'), function() {
 //mount routes
 app.use('/', routes);
 
-
-
 //socket events
-io.on('connection', function(socket){
+io.on('connection', function(socket) {
 
 	console.log('client connected');
 	
