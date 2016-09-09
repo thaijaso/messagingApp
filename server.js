@@ -42,12 +42,31 @@ server.listen(app.get('port'), function() {
 //mount routes
 app.use('/', routes);
 
+//current connected sockets
+var currentConnections = {};
+
 //socket events
 io.on('connection', function(socket) {
 
 	console.log('client: ' + socket.id + ' connected');
+	//store socket
+	currentConnections[socket.id] = {'socket': socket, 'userId': null};
+
+	//Grab the clients userId to associcate it with its socket
+	socket.on('sendUserId', function(data) {
+		var userId = data.userId
+
+		//Iterate through the connected sockets object looking for matching socket id socket parameter
+		for (socketId in currentConnections) {
+			if (socketId == socket.id) {
+				console.log('found');
+				//set the userId in the connections Object
+				currentConnections[socketId].userId = userId;
+			}
+		}
+	});
 	
-	socket.on('send-message', function(data) {
+	socket.on('sendMessage', function(data) {
 	    var message = data.message;
 
 	 //    pool.getConnection(function(err, connection) {
@@ -64,10 +83,10 @@ io.on('connection', function(socket) {
 		// 		io.emit('update-message-area', {'message': message});
 		// 	});
 		// });
-		console.log(socket.id);
 	});
   	
   	socket.on('disconnect', function(){
   		console.log('client: ' + socket.id + ' disconnected');
+  		delete currentConnections[socket.id];
   	});
 });
