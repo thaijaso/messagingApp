@@ -30,8 +30,8 @@ app.use(bodyParser.json());
 //use session middleware
 app.use(session({
 	secret: 'keyboard cat', 
-	cookie: {maxAge: 60000},
-	resave: true,
+	cookie: {maxAge: 86400000},	//24hrs
+	resave: false,
 	saveUninitialized: false
 }));
 
@@ -45,28 +45,29 @@ app.use('/', routes);
 //socket events
 io.on('connection', function(socket) {
 
-	console.log('client connected');
+	console.log('client: ' + socket.id + ' connected');
 	
 	socket.on('send-message', function(data) {
 	    var message = data.message;
 
-	    pool.getConnection(function(err, connection) {
-			connection.query("INSERT INTO messages (message, created_at) VALUES (" + "'" + message + "'" + ", " + "'" + moment().format('YYYY-MM-DD HH:mm:ss') + "'" + ")  ;", function(err, rows) {
+	 //    pool.getConnection(function(err, connection) {
+		// 	connection.query("INSERT INTO messages (message, created_at) VALUES (" + "'" + message + "'" + ", " + "'" + moment().format('YYYY-MM-DD HH:mm:ss') + "'" + ")  ;", function(err, rows) {
 				
-				if (err) {
-					console.log(err);
-				} else {
-					console.log(rows);
-				}
+		// 		if (err) {
+		// 			console.log(err);
+		// 		} else {
+		// 			console.log(rows);
+		// 		}
 				
-				connection.release();
+		// 		connection.release();
 
-				io.emit('update-message-area', {'message': message});
-			});
-		});
+		// 		io.emit('update-message-area', {'message': message});
+		// 	});
+		// });
+		console.log(socket.id);
 	});
   	
   	socket.on('disconnect', function(){
-
+  		console.log('client: ' + socket.id + ' disconnected');
   	});
 });
