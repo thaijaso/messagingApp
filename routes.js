@@ -12,30 +12,9 @@ var pool = mysql.createPool({
 module.exports = (function() {
 	var router = express.Router();
 
-	//show all messages in the database
+	//show login page
 	router.get('/', function(req, res) {
-		pool.getConnection(function(err,connection) {
-	  		connection.query('SELECT * FROM messages;', function(err, rows) {
-	  			var allMessages = [];
-	  			
-	  			if (err) {
-					console.log(err);
-				} else {
-
-					for(var i = 0; i < rows.length; i++) {
-						var row = rows[i];
-						allMessages.push(row.message);
-
-					}
-				}
-
-				connection.release();
-
-				var messageObj = {'messages': allMessages};
-
-				res.render('messages', messageObj);
-	  		});
-	  	});
+		res.render('login');
 	});
 
 	//show register page

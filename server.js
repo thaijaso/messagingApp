@@ -92,9 +92,6 @@ io.on('connection', function(socket) {
 							console.log('Success querying users_has_messages');
 						}
 
-						//update sender page
-				    	io.to(socket.id).emit('updateMessageArea', {'message': message});
-
 						for (socketId in currentConnections) {
 							console.log(socketId);
 							
