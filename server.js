@@ -22,6 +22,8 @@ app.set('port', process.env.PORT || 8888);
 
 //serve static files in the public folder
 app.use('/public', require('express').static(path.join(__dirname + '/public')));
+// app.use('/js', express.static(__dirname + '/public'));
+
 
 //middleware for passing data bewteen routes
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -116,3 +118,5 @@ io.on('connection', function(socket) {
   		delete currentConnections[socket.id];
   	});
 });
+
+

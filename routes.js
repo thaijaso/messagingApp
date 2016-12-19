@@ -9,6 +9,8 @@ var pool = mysql.createPool({
   	database : 'heroku_f7a2513ae4d0f1b'
 });
 
+
+
 module.exports = (function() {
 	var router = express.Router();
 
@@ -94,6 +96,14 @@ module.exports = (function() {
 			res.redirect('/login');
 		}
 	});
+
+
+
+router.get('/something', function(req, res) {
+
+	res.render('something.ejs');
+
+});
 
 	//show messages between two people
 	router.get('/messages/:senderId/:recieverId', function(req, res) {
