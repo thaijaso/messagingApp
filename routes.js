@@ -74,6 +74,35 @@ module.exports = (function() {
 			});
 		});
 	});
+
+	//login request from android device
+	router.post('/login-android', function(req, res) {
+		//console.log(res.statusCode);
+		//res.send([{'username': 'jason', 'password': 'thai'}]);
+		pool.getConnection(function(err, connection) {
+			connection.query("SELECT * FROM users WHERE users.username = ? AND users.password = ?", 
+			[req.body.username, req.body.password], function(err, rows) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Success querying users');
+				}
+
+				connection.release();
+
+				if (rows.length) {
+					var user = rows[0];
+					req.session.userId = user.id;
+					var username = user.username;
+					var password = user.password;
+					res.send([{'message': 'Success', 'username': username, 'password': password}]);
+				} else {
+					console.log('user not found');
+					res.send([{'message': 'Error'}]);
+				}
+			});
+		});
+	});
 	
 	//Show contacts page
 	router.get('/contacts', function(req, res) {
