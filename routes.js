@@ -45,41 +45,8 @@ module.exports = (function() {
 		res.render('login');
 	});
 
-	//verify user and set session
-	router.post('/login', function(req, res) {
-		var username = req.body.username;
-		var password = req.body.password;
-
-		pool.getConnection(function(err, connection) {
-			connection.query("SELECT * FROM users WHERE users.username = " + "'" + username + "'" + "AND users.password = " + "'" + password + "'", function(err, rows) {
-				if (err) {
-					console.log(err);
-				} else {
-					console.log('Success querying users');
-				}
-
-				connection.release();
-
-				//user found
-				if (rows.length) {
-					var userId = rows[0].id;
-					console.log('UserId: ' + userId + ' found');
-					//set session
-					req.session.userId = userId;
-					console.log(req.session);
-					res.redirect('/contacts');
-				} else {
-					console.log('user not found');
-					res.send('error user not found');
-				}
-			});
-		});
-	});
-
 	//login request from android device
-	router.post('/login-android', function(req, res) {
-		//console.log(res.statusCode);
-		//res.send([{'username': 'jason', 'password': 'thai'}]);
+	router.post('/login', function(req, res) {
 		pool.getConnection(function(err, connection) {
 			connection.query("SELECT * FROM users WHERE users.username = ? AND users.password = ?", 
 			[req.body.username, req.body.password], function(err, rows) {
