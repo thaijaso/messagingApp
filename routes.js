@@ -66,6 +66,7 @@ module.exports = (function() {
 					console.log('UserId: ' + userId + ' found');
 					//set session
 					req.session.userId = userId;
+					console.log(req.session);
 					res.redirect('/contacts');
 				} else {
 					console.log('user not found');
@@ -93,6 +94,7 @@ module.exports = (function() {
 				if (rows.length) {
 					var user = rows[0];
 					req.session.userId = user.id;
+					console.log(req.session);
 					var username = user.username;
 					var password = user.password;
 					res.send([{'message': 'Success', 'username': username, 'password': password}]);
