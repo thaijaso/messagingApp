@@ -75,24 +75,19 @@ module.exports = (function() {
 	
 	//Show contacts page
 	router.get('/contacts', function(req, res) {
-		//if session is set, go to contacts page, otherwise login
-		if (req.session.userId) {
-			pool.getConnection(function(err, connection) {
-				connection.query("SELECT * FROM users", function(err, rows) {
-					
-					if (err) {
-						console.log(err);
-					} else {
-						console.log('Success querying contacts');
-					}
-					
-					connection.release();
-					res.render('contacts', {'users': rows, 'userId': req.session.userId});		
-				});
+		pool.getConnection(function(err, connection) {
+			connection.query("SELECT * FROM users", function(err, rows) {
+				
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Success querying contacts');
+				}
+				
+				connection.release();
+				res.render('contacts', {'users': rows, 'userId': req.session.userId});		
 			});
-		} else {
-			res.redirect('/login');
-		}
+		});
 	});
 
 	//Get conversations with user
