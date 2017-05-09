@@ -35,6 +35,7 @@ module.exports = (function() {
 				} else {
 					console.log(rows);
 				}
+				res.send([rows]);
 				connection.release();
 			});
 		});
