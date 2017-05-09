@@ -92,42 +92,38 @@ module.exports = (function() {
 
 	//Get conversations with user
 	router.get('/conversations/:userId', function(req, res) {
-		if (req.session.userId) {
-			pool.getConnection(function(err, connection) {
-				var query = 'SELECT message_id, message, created_at, user_id AS sender_id, recipient_id, username AS recipientName ' +
-							'FROM messages ' +
-							'JOIN users_has_messages ' +
-							'ON users_has_messages.message_id = messages.id ' +
-							'JOIN users ON users.id = users_has_messages.recipient_id ' +
-							'WHERE created_at IN ( ' +
-							    'SELECT MAX(created_at) ' +
-							    'FROM messages ' +
-							    'JOIN users_has_messages ' +
-							    'ON users_has_messages.message_id = messages.id ' +
-							    'WHERE users_has_messages.user_id = ? ' +
-							    'GROUP BY recipient_id ' +
-							') ' +
-							'ORDER BY created_at DESC';
+		pool.getConnection(function(err, connection) {
+			var query = 'SELECT message_id, message, created_at, user_id AS sender_id, recipient_id, username AS recipientName ' +
+						'FROM messages ' +
+						'JOIN users_has_messages ' +
+						'ON users_has_messages.message_id = messages.id ' +
+						'JOIN users ON users.id = users_has_messages.recipient_id ' +
+						'WHERE created_at IN ( ' +
+						    'SELECT MAX(created_at) ' +
+						    'FROM messages ' +
+						    'JOIN users_has_messages ' +
+						    'ON users_has_messages.message_id = messages.id ' +
+						    'WHERE users_has_messages.user_id = ? ' +
+						    'GROUP BY recipient_id ' +
+						') ' +
+						'ORDER BY created_at DESC';
 
-				var userId = req.params.userId;
-				console.log(userId);
+			var userId = req.params.userId;
+			console.log(userId);
 
-				connection.query(query, [userId], function(err, rows) {
+			connection.query(query, [userId], function(err, rows) {
 
-					if (err) {
-						console.log(err);
-					} else {
-						console.log('success querying messages');
-					}
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('success querying messages');
+				}
 
-					connection.release();
+				connection.release();
 
-					res.send(rows);
-				});
+				res.send(rows);
 			});
-		} else {
-			res.send([{message: 'Error, please login'}]);
-		}
+		});
 	});
 
 	//show messages between two people
