@@ -64,7 +64,8 @@ module.exports = (function() {
 					console.log(req.session);
 					var username = user.username;
 					var password = user.password;
-					res.send([{'message': 'Success', 'username': username, 'password': password}]);
+					var userId = user.id;
+					res.send([{'message': 'Success', 'username': username, 'password': password, 'userId': userId}]);
 				} else {
 					console.log('user not found');
 					res.send([{'message': 'Error'}]);
