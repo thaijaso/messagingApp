@@ -76,18 +76,24 @@ module.exports = (function() {
 	});
 	
 	//Show contacts page
-	router.get('/contacts', function(req, res) {
+	router.get('/contacts/:userId', function(req, res) {
 		pool.getConnection(function(err, connection) {
-			connection.query("SELECT * FROM users", function(err, rows) {
-				
+			var query = "SELECT * FROM users";
+			var userId = req.params.userId;
+			// console.log(userId);
+
+			connection.query(query, [userId], function(err, rows) {
+
 				if (err) {
 					console.log(err);
 				} else {
-					console.log('Success querying contacts');
+					console.log('success querying users');
 				}
-				
+
 				connection.release();
-				res.render('contacts', {'users': rows, 'userId': req.session.userId});		
+				// console.log("rows " + rows);
+
+				res.send(rows);
 			});
 		});
 	});
