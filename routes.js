@@ -137,9 +137,17 @@ module.exports = (function() {
 	//show messages between two people
 	router.get('/messages/:senderId/:recieverId', function(req, res) {
 		//if session set, show messages, otherwise redirect to login
-		if (req.session.userId) {
+		// if (req.session.userId) {
 			pool.getConnection(function(err, connection) {
-				connection.query("SELECT * FROM users JOIN users_has_messages ON users.id = users_has_messages.user_id JOIN messages ON messages.id = users_has_messages.message_id WHERE (users.id = " + req.params.senderId + " AND users_has_messages.recipient_id = " + req.params.recieverId + ") OR (users.id = " + req.params.recieverId + " AND users_has_messages.recipient_id = " + req.params.senderId + ") ORDER BY created_at ASC;", function(err, rows) {
+				var query = "SELECT * FROM users JOIN users_has_messages ON users.id = users_has_messages.user_id JOIN messages ON messages.id = users_has_messages.message_id WHERE (users.id = " 
+					+ req.params.senderId + " AND users_has_messages.recipient_id = " + req.params.recieverId + ") OR (users.id = " 
+					+ req.params.recieverId + " AND users_has_messages.recipient_id = " + req.params.senderId +
+					 ") ORDER BY created_at ASC;"
+
+				var userId = req.params.userId;
+				console.log(userId);
+
+				connection.query(query, [userId], function(err, rows) {
 					if (err) {
 						console.log(err);
 					} else {
@@ -154,19 +162,21 @@ module.exports = (function() {
 						messages.push(rows[i]);
 					}
 
-					res.render('messages', {'messages': messages, 
-						'userId': req.session.userId, 'recipientId': req.params.recieverId});	
+					// res.send(rows); // is that ok?
+					res.send(messages);
+					// res.render('messages', {'messages': messages, 
+					// 	'userId': req.session.userId, 'recipientId': req.params.recieverId});	
 				});
 			});
-		} else {
-			res.redirect('/login');
-		}
+		// } else {
+		// 	res.redirect('/login');
+		// }
 	});
 
 	//Send message from user to another
 	router.post('/send-message/:senderId/:reciverId', function(req, res) {
 		//if session set proceed to query, otherwise redirect to login
-		if (req.session.userId) {
+		// if (req.session.userId) {
 
 			var message = req.body.message; 
 			var userId = req.body.userId; 
@@ -193,9 +203,9 @@ module.exports = (function() {
 				connection.release();
 				res.send(rows);	
 			});		
-		} else {
-			res.redirect('/login');
-		}
+		// } else {
+		// 	res.redirect('/login');
+		// }
 	});
 
 	return router;
