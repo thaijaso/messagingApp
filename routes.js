@@ -101,28 +101,32 @@ module.exports = (function() {
 	//Get conversations with user
 	router.get('/conversations/:userId', function(req, res) {
 		pool.getConnection(function(err, connection) {
-			var query = 'SELECT message_id, message, created_at, user_id AS sender_id, recipient_id, username AS recipientName ' +
+			var query = 'SELECT message_id AS messageId, message, created_at AS createdAt, user_id AS senderId, recipient_id AS recipientId, users.username AS senderName, users2.username AS recipientName ' +
 						'FROM messages ' +
 						'JOIN users_has_messages ' +
 						'ON users_has_messages.message_id = messages.id ' +
-						'JOIN users ON users.id = users_has_messages.recipient_id ' +
+						'JOIN users ON users.id = users_has_messages.user_id ' +
+						'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
 						'WHERE created_at IN ( ' +
 						    'SELECT MAX(created_at) ' +
 						    'FROM messages ' +
 						    'JOIN users_has_messages ' +
 						    'ON users_has_messages.message_id = messages.id ' +
 						    'WHERE users_has_messages.user_id = ? ' +
+						    'OR users_has_messages.recipient_id = ? ' +
 						    'GROUP BY recipient_id ' +
 						') ' +
 						'ORDER BY created_at DESC';
-
+			
 			var userId = req.params.userId;
 			console.log(userId);
 
-			connection.query(query, [userId], function(err, rows) {
+			connection.query(query, [userId, userId], function(err, rows) {
 
 				if (err) {
+					console.log(query);
 					console.log(err);
+					
 				} else {
 					console.log('success querying messages');
 				}
@@ -174,34 +178,36 @@ module.exports = (function() {
 	});
 
 	//Send message from user to another
-	router.post('/send-message/:senderId/:reciverId', function(req, res) {
+	router.post('/send-message/:senderId/:recipientId', function(req, res) {
 		//if session set proceed to query, otherwise redirect to login
 		// if (req.session.userId) {
 
 			var message = req.body.message; 
-			var userId = req.body.userId; 
-			var recipientId = req.body.recipientId;
+			var senderId = req.params.senderId; 
+			var recipientId = req.params.recipientId;
+
+			console.log(message);
+			console.log(senderId);
+			console.log(recipientId);
 			
 			pool.getConnection(function(err,connection) {	
-
 				connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
 					if (err) {
 						console.log(err);
 					} else {
 						console.log('Sucess querying messages');
+
+						connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + senderId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
+							if (err) {
+								console.log(err);
+							} else {
+								console.log('Success querying users_has_messages');
+								connection.release();
+								res.send(rows);	
+							}
+						});
 					}
 				});	
-
-				connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + userId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
-					if (err) {
-						console.log(err);
-					} else {
-						console.log('Success querying users_has_messages');
-					}
-				});
-				
-				connection.release();
-				res.send(rows);	
 			});		
 		// } else {
 		// 	res.redirect('/login');
