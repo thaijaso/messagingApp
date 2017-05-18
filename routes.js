@@ -226,49 +226,74 @@ module.exports = (function() {
 
 
 	// post a profile picture
-	router.post('/upload-photo', upload.single('avatar'), function(req, res) {
+	router.post('/upload-photo/:userId', upload.single('avatar'), function(req, res) {
         console.log(req.file);
         var tempPath = req.file.path;
         var targetPath = 'public/img/' + req.file.originalname;
+
+        var userId = req.params.userId;
+
+        console.log(userId);
+
+        // console.log
 
         var src = fs.createReadStream(tempPath);
         var dest = fs.createWriteStream(targetPath);
         src.pipe(dest);
 
-        // src.on('end', function() {
-        //     pool.getConnection(function(err, connection) {
-        //         if (err) {
-        //             console.log(err);
-        //             res.send(err);
-        //         }
+        src.on('end', function() {
+            pool.getConnection(function(err, connection) {
+                if (err) {
+                    console.log(err);
+                    res.send(err);
+                }
 
-        //         var filePath = 'img/' + req.file.originalname;
-        //         var clientId = req.body.clientId;
+                var filePath = 'img/' + req.file.originalname;
 
-        //         var query = connection.query("UPDATE Client SET profileImgPath = ? WHERE id = ?", [filePath, clientId], function(err, rows) {
+                var query = connection.query("UPDATE users SET profileImgPath = ? WHERE id = ?", [filePath, userId], function(err, rows) {
 
-        //             if (err) {
-        //                 console.log(err);
-        //                 res.send(err);
-        //             }
+                    if (err) {
+                        console.log(err);
+                        res.send(err);
+                    }
 
-        //             req.session.user.profileImgPath = filePath;
+                    connection.release();
+                    res.send([rows]);
 
-        //             if (req.session.isTrainer) {
-        //                 res.redirect('/coverflow');
-        //             } else {
-        //                 res.redirect('/dashboard');
-        //             }
-        //             connection.release();
-        //         });
-        //         console.log(query.sql);
-        //     });
-        // });
+                });
+                console.log(query.sql);
+            });
+        });
 
-        // src.on('error', function(err) {
-        //     res.send('error');
-        // });
+        src.on('error', function(err) {
+            res.send('error');
+        });
 });
+
+		//get user information (used for profile image)
+	router.get('/getUserInfo/:userId', function(req, res) {
+		pool.getConnection(function(err, connection) {
+			var query = "SELECT * FROM users WHERE users.id = ?";
+			var userId = req.params.userId;
+			// console.log(userId);
+
+			connection.query(query, [userId], function(err, rows) {
+
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('success querying users');
+				}
+
+				connection.release();
+				// console.log("rows " + rows);
+
+				res.send(rows);
+			});
+		});
+	});
+	
+
 
 	return router;
 })
