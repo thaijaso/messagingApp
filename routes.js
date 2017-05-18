@@ -103,19 +103,12 @@ module.exports = (function() {
 		pool.getConnection(function(err, connection) {
 			var query = 'SELECT message_id AS messageId, message, created_at AS createdAt, user_id AS senderId, recipient_id AS recipientId, users.username AS senderName, users2.username AS recipientName ' +
 						'FROM messages ' +
-						'JOIN users_has_messages ' +
-						'ON users_has_messages.message_id = messages.id ' +
+						'JOIN users_has_messages ON users_has_messages.message_id = messages.id ' +
 						'JOIN users ON users.id = users_has_messages.user_id ' +
 						'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
-						'WHERE created_at IN ( ' +
-						    'SELECT MAX(created_at) ' +
-						    'FROM messages ' +
-						    'JOIN users_has_messages ' +
-						    'ON users_has_messages.message_id = messages.id ' +
-						    'WHERE users_has_messages.user_id = ? ' +
-						    'OR users_has_messages.recipient_id = ? ' +
-						    'GROUP BY recipient_id ' +
-						') ' +
+						'WHERE users_has_messages.user_id = ? ' +
+						'OR users_has_messages.recipient_id = ? ' +
+						'GROUP by message_id ' +
 						'ORDER BY created_at DESC';
 			
 			var userId = req.params.userId;
@@ -126,14 +119,37 @@ module.exports = (function() {
 				if (err) {
 					console.log(query);
 					console.log(err);
-					
 				} else {
 					console.log('success querying messages');
 				}
 
 				connection.release();
 
-				res.send(rows);
+				var convoMap = {}; // Use this object to identify unique conversations the user is having
+				var convos = []; // send as the JSON response, should be orders by latest convo
+
+				// Generate the latest conversations since i couldn't write one nice SQL query
+				// To get the latest message for each conversation :(
+				for (var i = 0; i < rows.length; i++) {
+					var senderId = rows[i].senderId
+					var recipientId = rows[i].recipientId;
+
+					if (senderId != userId) {
+						if (!(senderId in convoMap)) { // here we check to see if the senderId is not in the map
+							convoMap[senderId] = rows[i];
+							convos.push(rows[i]);
+						}
+					}
+
+					if (recipientId != userId) { // here we check to see if the recipientId is not in the map
+						if (!(recipientId in convoMap)) {
+							convoMap[recipientId] = rows[i];
+							convos.push(rows[i]);
+						}
+					}
+				}
+
+				res.send(convos);
 			});
 		});
 	});
