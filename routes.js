@@ -159,81 +159,69 @@ module.exports = (function() {
 	});
 
 	//show messages between two people
-	router.get('/messages/:senderId/:recieverId', function(req, res) {
-		//if session set, show messages, otherwise redirect to login
-		// if (req.session.userId) {
-			pool.getConnection(function(err, connection) {
-				var query = "SELECT * FROM users JOIN users_has_messages ON users.id = users_has_messages.user_id JOIN messages ON messages.id = users_has_messages.message_id WHERE (users.id = " 
-					+ req.params.senderId + " AND users_has_messages.recipient_id = " + req.params.recieverId + ") OR (users.id = " 
-					+ req.params.recieverId + " AND users_has_messages.recipient_id = " + req.params.senderId +
-					 ") ORDER BY created_at ASC;"
+	router.get('/messages/:senderId/:recipientId', function(req, res) {
+		pool.getConnection(function(err, connection) {
+			var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId ' + 
+						'FROM users ' +
+						'JOIN users_has_messages ON users.id = users_has_messages.user_id ' +
+						'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
+						'JOIN messages ON messages.id = users_has_messages.message_id ' +
+						'WHERE (users.id = ? AND users_has_messages.recipient_id = ?) ' +
+						'OR (users.id = ? AND users_has_messages.recipient_id = ?) ' +
+						'ORDER BY created_at ASC';
 
-				var userId = req.params.userId;
-				console.log(userId);
+			var senderId = req.params.senderId;
+			var recipientId = req.params.recipientId;
+		
+			console.log(senderId);
+			console.log(recipientId);
 
-				connection.query(query, [userId], function(err, rows) {
-					if (err) {
-						console.log(err);
-					} else {
-						console.log('Success querying messages');
-					}
-					
-					connection.release();
-					
-					var messages = [];
-					
-					for (var i = 0; i < rows.length; i++) {
-						messages.push(rows[i]);
-					}
+			connection.query(query, [senderId, recipientId, recipientId, senderId], function(err, rows) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Success querying messages');
+				}
+				
+				connection.release();
+				
 
-					// res.send(rows); // is that ok?
-					res.send(messages);
-					// res.render('messages', {'messages': messages, 
-					// 	'userId': req.session.userId, 'recipientId': req.params.recieverId});	
-				});
+				res.send(rows); // is that ok?	
 			});
-		// } else {
-		// 	res.redirect('/login');
-		// }
+		});
 	});
 
 
 
 	//Send message from user to another
 	router.post('/send-message/:senderId/:recipientId', function(req, res) {
-		//if session set proceed to query, otherwise redirect to login
-		// if (req.session.userId) {
+		var message = req.body.message; 
+		var senderId = req.params.senderId; 
+		var recipientId = req.params.recipientId;
 
-			var message = req.body.message; 
-			var senderId = req.params.senderId; 
-			var recipientId = req.params.recipientId;
+		console.log(message);
+		console.log(senderId);
+		console.log(recipientId);
+		
+		pool.getConnection(function(err,connection) {	
+			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Sucess querying messages');
 
-			console.log(message);
-			console.log(senderId);
-			console.log(recipientId);
-			
-			pool.getConnection(function(err,connection) {	
-				connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
-					if (err) {
-						console.log(err);
-					} else {
-						console.log('Sucess querying messages');
-
-						connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + senderId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
-							if (err) {
-								console.log(err);
-							} else {
-								console.log('Success querying users_has_messages');
-								connection.release();
-								res.send(rows);	
-							}
-						});
-					}
-				});	
-			});		
-		// } else {
-		// 	res.redirect('/login');
-		// }
+					connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + senderId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
+						if (err) {
+							console.log(err);
+						} else {
+							console.log('Success querying users_has_messages');
+							connection.release();
+							res.send(rows);	
+						}
+					});
+				}
+			});	
+		});		
 	});
 
 
