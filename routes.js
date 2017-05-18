@@ -9,8 +9,6 @@ var pool = mysql.createPool({
   	database : 'heroku_f7a2513ae4d0f1b'
 });
 
-
-
 module.exports = (function() {
 	var router = express.Router();
 
