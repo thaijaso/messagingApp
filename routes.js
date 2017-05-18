@@ -1,6 +1,10 @@
 var express = require('express');
 var mysql = require('mysql');
 var moment = require('moment');
+const multer = require('multer');
+const upload = multer({ dest: 'public/img/' });
+const fs = require('fs');
+
 
 var pool = mysql.createPool({
   	host     : 'us-cdbr-iron-east-04.cleardb.net',
@@ -193,6 +197,8 @@ module.exports = (function() {
 		// }
 	});
 
+
+
 	//Send message from user to another
 	router.post('/send-message/:senderId/:recipientId', function(req, res) {
 		//if session set proceed to query, otherwise redirect to login
@@ -230,5 +236,53 @@ module.exports = (function() {
 		// }
 	});
 
+
+	// post a profile picture
+	router.post('/upload-photo', upload.single('avatar'), function(req, res) {
+        console.log(req.file);
+        var tempPath = req.file.path;
+        var targetPath = 'public/img/' + req.file.originalname;
+
+        var src = fs.createReadStream(tempPath);
+        var dest = fs.createWriteStream(targetPath);
+        src.pipe(dest);
+
+        // src.on('end', function() {
+        //     pool.getConnection(function(err, connection) {
+        //         if (err) {
+        //             console.log(err);
+        //             res.send(err);
+        //         }
+
+        //         var filePath = 'img/' + req.file.originalname;
+        //         var clientId = req.body.clientId;
+
+        //         var query = connection.query("UPDATE Client SET profileImgPath = ? WHERE id = ?", [filePath, clientId], function(err, rows) {
+
+        //             if (err) {
+        //                 console.log(err);
+        //                 res.send(err);
+        //             }
+
+        //             req.session.user.profileImgPath = filePath;
+
+        //             if (req.session.isTrainer) {
+        //                 res.redirect('/coverflow');
+        //             } else {
+        //                 res.redirect('/dashboard');
+        //             }
+        //             connection.release();
+        //         });
+        //         console.log(query.sql);
+        //     });
+        // });
+
+        // src.on('error', function(err) {
+        //     res.send('error');
+        // });
+});
+
 	return router;
-})();
+})
+
+();
