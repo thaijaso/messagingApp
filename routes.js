@@ -102,6 +102,8 @@ module.exports = (function() {
 
 	//Get conversations with user
 	router.get('/conversations/:userId', function(req, res) {
+		console.log('HEREEEEE');
+
 		pool.getConnection(function(err, connection) {
 			var query = 'SELECT message_id AS messageId, message, created_at AS createdAt, user_id AS senderId, recipient_id AS recipientId, users.username AS senderName, users2.username AS recipientName ' +
 						'FROM messages ' +
