@@ -1,6 +1,10 @@
 var express = require('express');
 var mysql = require('mysql');
 var moment = require('moment');
+const multer = require('multer');
+const upload = multer({ dest: 'public/img/' });
+const fs = require('fs');
+
 
 var pool = mysql.createPool({
   	host     : 'us-cdbr-iron-east-04.cleardb.net',
@@ -185,6 +189,8 @@ module.exports = (function() {
 		});
 	});
 
+
+
 	//Send message from user to another
 	router.post('/send-message/:senderId/:recipientId', function(req, res) {
 		var message = req.body.message; 
@@ -216,5 +222,78 @@ module.exports = (function() {
 		});		
 	});
 
+
+	// post a profile picture
+	router.post('/upload-photo/:userId', upload.single('avatar'), function(req, res) {
+        console.log(req.file);
+        var tempPath = req.file.path;
+        var targetPath = 'public/img/' + req.file.originalname;
+
+        var userId = req.params.userId;
+
+        console.log(userId);
+
+        // console.log
+
+        var src = fs.createReadStream(tempPath);
+        var dest = fs.createWriteStream(targetPath);
+        src.pipe(dest);
+
+        src.on('end', function() {
+            pool.getConnection(function(err, connection) {
+                if (err) {
+                    console.log(err);
+                    res.send(err);
+                }
+
+                var filePath = 'img/' + req.file.originalname;
+
+                var query = connection.query("UPDATE users SET profileImgPath = ? WHERE id = ?", [filePath, userId], function(err, rows) {
+
+                    if (err) {
+                        console.log(err);
+                        res.send(err);
+                    }
+
+                    connection.release();
+                    res.send([rows]);
+
+                });
+                console.log(query.sql);
+            });
+        });
+
+        src.on('error', function(err) {
+            res.send('error');
+        });
+});
+
+		//get user information (used for profile image)
+	router.get('/getUserInfo/:userId', function(req, res) {
+		pool.getConnection(function(err, connection) {
+			var query = "SELECT * FROM users WHERE users.id = ?";
+			var userId = req.params.userId;
+			// console.log(userId);
+
+			connection.query(query, [userId], function(err, rows) {
+
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('success querying users');
+				}
+
+				connection.release();
+				// console.log("rows " + rows);
+
+				res.send(rows);
+			});
+		});
+	});
+	
+
+
 	return router;
-})();
+})
+
+();
