@@ -173,9 +173,6 @@ module.exports = (function() {
 
 			var senderId = req.params.senderId;
 			var recipientId = req.params.recipientId;
-		
-			console.log(senderId);
-			console.log(recipientId);
 
 			connection.query(query, [senderId, recipientId, recipientId, senderId], function(err, rows) {
 				if (err) {

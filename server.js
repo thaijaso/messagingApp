@@ -8,6 +8,10 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var routes = require('./routes.js');
 
+/* For logging objects in console */
+const util = require('util');
+
+
 //connect to heroku database
 var pool = mysql.createPool({
   	host     : 'us-cdbr-iron-east-04.cleardb.net',
@@ -46,6 +50,7 @@ app.use('/', routes);
 
 //current connected sockets
 var currentConnections = {};
+var onlineUsers = [];
 
 //socket events
 io.on('connection', function(socket) {
@@ -55,16 +60,37 @@ io.on('connection', function(socket) {
 	currentConnections[socket.id] = {'socket': socket, 'userId': null};
 
 	//Grab the clients userId to associcate it with its socket
+	//change event to userCameOnline
 	socket.on('sendUserId', function(data) {
 		var userId = data.userId
+		var otherUserId = data.otherUserId;
+
+		console.log('otherUserId: ' + otherUserId);
 
 		//Iterate through the connected sockets object looking for matching socket IDs
 		for (socketId in currentConnections) {
 			if (socketId == socket.id) {
-				console.log('found');
+				console.log('socket found -> link userId to socket');
 				//set the userId in the connections Object to the userId 
 				//passed in from the clients socket
 				currentConnections[socketId].userId = userId;
+				onlineUsers.push({userId: userId});
+			}
+		}
+		
+		console.log(onlineUsers);
+		io.emit('usersOnline', onlineUsers);
+	});
+
+	//Client is typing a message
+	socket.on('isTyping', function(data) {
+		var recipientId = data.recipientId;
+		console.log('isTyping to: ' + data.recipientId);
+		//Iterate through the connected sockets boejct looking for the recipientId
+		for (socketId in currentConnections) {
+			if (recipientId == currentConnections[socketId].userId) {
+				console.log('recipient found');
+				io.to(socketId).emit('showChatBubbles');
 			}
 		}
 	});
@@ -112,8 +138,20 @@ io.on('connection', function(socket) {
 			});	
 		});		
 	});
+
+	socket.on('userWentOffline', function(data) {
+		console.log('userWentOffline: ' + data.userId);
+
+		for (var i = 0; i < onlineUsers.length; i++) {
+			if (onlineUsers[i].userId === data.userId) {
+				console.log('found userId to delete');
+				onlineUsers.splice(i, 1);
+				console.log('onlineUsers: ' + util.inspect(onlineUsers, false, null));
+			}
+		}
+	});
   	
-  	socket.on('disconnect', function(){
+  	socket.on('disconnect', function() {
   		console.log('client: ' + socket.id + ' disconnected');
   		delete currentConnections[socket.id];
   	});
