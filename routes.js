@@ -80,7 +80,7 @@ module.exports = (function() {
 	//Show contacts page
 	router.get('/contacts/:userId', function(req, res) {
 		pool.getConnection(function(err, connection) {
-			var query = "SELECT * FROM users";
+			var query = "SELECT id AS userId, username, password, profileImgPath FROM users";
 			var userId = req.params.userId;
 			// console.log(userId);
 
@@ -103,7 +103,7 @@ module.exports = (function() {
 	//Get conversations with user
 	router.get('/conversations/:userId', function(req, res) {
 		pool.getConnection(function(err, connection) {
-			var query = 'SELECT message_id AS messageId, message, created_at AS createdAt, user_id AS senderId, recipient_id AS recipientId, users.username AS senderName, users2.username AS recipientName ' +
+			var query = 'SELECT message_id AS messageId, message, created_at AS createdAt, user_id AS senderId, recipient_id AS recipientId, users.username AS senderName, users2.username AS recipientName,  users2.profileImgPath AS recipientProfileImgPath, users.profileImgPath AS senderProfileImgPath ' +
 						'FROM messages ' +
 						'JOIN users_has_messages ON users_has_messages.message_id = messages.id ' +
 						'JOIN users ON users.id = users_has_messages.user_id ' +
