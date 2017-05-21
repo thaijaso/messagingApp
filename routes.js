@@ -10,7 +10,8 @@ var pool = mysql.createPool({
   	host     : 'us-cdbr-iron-east-04.cleardb.net',
   	user     : 'b813a1e61364f2',
   	password : '2628f177',
-  	database : 'heroku_f7a2513ae4d0f1b'
+  	database : 'heroku_f7a2513ae4d0f1b',
+  	charset  : 'utf8mb4'
 });
 
 module.exports = (function() {
@@ -102,6 +103,8 @@ module.exports = (function() {
 
 	//Get conversations with user
 	router.get('/conversations/:userId', function(req, res) {
+		console.log('HEREEEEE');
+
 		pool.getConnection(function(err, connection) {
 			var query = 'SELECT message_id AS messageId, message, created_at AS createdAt, user_id AS senderId, recipient_id AS recipientId, users.username AS senderName, users2.username AS recipientName,  users2.profileImgPath AS recipientProfileImgPath, users.profileImgPath AS senderProfileImgPath ' +
 						'FROM messages ' +
