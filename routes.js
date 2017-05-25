@@ -31,8 +31,10 @@ module.exports = (function() {
 	router.post('/register', function(req, res) {
 		var username = req.body.username;
 		var password = req.body.password;
+		var name = req.body.name;
+		var phone = req.body.phone;
 		pool.getConnection(function(err,connection) {
-			connection.query("INSERT INTO users (username, password) VALUES ('" + username + "'" + "," + "'" + password + "'" + ")", function(err, rows) {
+			connection.query("INSERT INTO users (username, password, name, phone) VALUES ('" + username + "'" + "," + "'" + password + "'" +  "," + "'" + name + "'" +  "," + "'" + phone + "'" +")", function(err, rows) {
 				if (err) {
 					console.log(err);
 				} else {
@@ -162,7 +164,7 @@ module.exports = (function() {
 	//show messages between two people
 	router.get('/messages/:senderId/:recipientId', function(req, res) {
 		pool.getConnection(function(err, connection) {
-			var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId ' + 
+			var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId, created_at AS createdAt ' + 
 						'FROM users ' +
 						'JOIN users_has_messages ON users.id = users_has_messages.user_id ' +
 						'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
