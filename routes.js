@@ -245,7 +245,7 @@ module.exports = (function() {
 		console.log(recipientId);
 
 		pool.getConnection(function(err,connection) {	
-			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD K:mm:ss a') + "')", function(err, rows) {
+			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
 				if (err) {
 					console.log(err);
 				} else {
