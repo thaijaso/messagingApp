@@ -107,6 +107,8 @@ io.on('connection', function(socket) {
 	    var senderSocketId = socket.id;
 	    var recipientSocketId;
 
+	    console.log('current time: ' + moment().format('YYYY-MM-DD HH:mm:ss'));
+
 	    pool.getConnection(function(err,connection) {	
 			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
 				if (err) {
