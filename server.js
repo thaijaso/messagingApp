@@ -103,6 +103,7 @@ io.on('connection', function(socket) {
 	    console.log('senderId: ' + userId);
 	    console.log('recipientId: ' + recipientId);
 
+
 	    var senderSocketId = socket.id;
 	    var recipientSocketId;
 

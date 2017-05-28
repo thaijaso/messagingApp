@@ -103,6 +103,27 @@ module.exports = (function() {
 		});
 	});
 
+	//Show contacts page
+	router.get('/getUsers/', function(req, res) {
+		pool.getConnection(function(err, connection) {
+			var query = "SELECT username FROM users";
+
+			connection.query(query, function(err, rows) {
+
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('success querying users');
+				}
+
+				connection.release();
+				// console.log("rows " + rows);
+
+				res.send(rows);
+			});
+		});
+	});
+
 	//Get conversations with user
 	router.get('/conversations/:userId', function(req, res) {
 		console.log('HEREEEEE');
@@ -161,36 +182,56 @@ module.exports = (function() {
 		});
 	});
 
-	//show messages between two people
-	router.get('/messages/:senderId/:recipientId', function(req, res) {
-		pool.getConnection(function(err, connection) {
-			var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId, created_at AS createdAt ' + 
-						'FROM users ' +
-						'JOIN users_has_messages ON users.id = users_has_messages.user_id ' +
-						'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
-						'JOIN messages ON messages.id = users_has_messages.message_id ' +
-						'WHERE (users.id = ? AND users_has_messages.recipient_id = ?) ' +
-						'OR (users.id = ? AND users_has_messages.recipient_id = ?) ' +
-						'ORDER BY created_at ASC';
+//show messages between two people
+  router.get('/messages/:senderId/:recipientId', function(req, res) {
+    pool.getConnection(function(err, connection) {
+      var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId, created_at AS createdAt ' + 
+            'FROM users ' +
+            'JOIN users_has_messages ON users.id = users_has_messages.user_id ' +
+            'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
+            'JOIN messages ON messages.id = users_has_messages.message_id ' +
+            'WHERE (users.id = ? AND users_has_messages.recipient_id = ?) ' +
+            'OR (users.id = ? AND users_has_messages.recipient_id = ?) ' +
+            'ORDER BY created_at ASC';
 
-			var senderId = req.params.senderId;
-			var recipientId = req.params.recipientId;
+      var senderId = req.params.senderId;
+      var recipientId = req.params.recipientId;
 
-			connection.query(query, [senderId, recipientId, recipientId, senderId], function(err, rows) {
-				if (err) {
-					console.log(err);
-				} else {
-					console.log('Success querying messages');
-				}
-				
-				connection.release();
-				
+      connection.query(query, [senderId, recipientId, recipientId, senderId], function(err, rows) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('Success querying messages');
+        }
+        
+        connection.release();
 
-				res.send(rows); // is that ok?	
-			});
-		});
-	});
+        var messages = [];
+        
+        for (var i = 0; i < rows.length; i++) {
 
+          var date = moment(rows[i].createdAt);
+          var dateFormatted = date.format();
+
+          var message = {
+            messageId: rows[i].messageId,
+            message: rows[i].message,
+            senderName: rows[i].senderName,
+            recipientName: rows[i].recipientName,
+            senderId: rows[i].senderId,
+            recipientId: rows[i].recipientId,
+            createdAt: dateFormatted
+          };
+
+          console.log(message);
+          messages.push(message);
+          
+
+        }
+        res.send(messages);
+      });
+    });
+  });
 
 
 	//Send message from user to another
@@ -202,9 +243,9 @@ module.exports = (function() {
 		console.log(message);
 		console.log(senderId);
 		console.log(recipientId);
-		
+
 		pool.getConnection(function(err,connection) {	
-			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
+			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD K:mm:ss a') + "')", function(err, rows) {
 				if (err) {
 					console.log(err);
 				} else {
@@ -291,6 +332,60 @@ module.exports = (function() {
 				res.send(rows);
 			});
 		});
+	});
+
+
+		//Send message from user to another
+	router.post('/send-photo/:senderId/:recipientId',  upload.single('photo'), function(req, res) {
+		var message = req.body.message; 
+		var senderId = req.params.senderId; 
+		var recipientId = req.params.recipientId;
+		var tempPath = req.file.path;
+        var targetPath = 'public/img/' + req.file.originalname;
+
+
+         var src = fs.createReadStream(tempPath);
+        var dest = fs.createWriteStream(targetPath);
+        src.pipe(dest);
+
+        src.on('end', function() {
+            pool.getConnection(function(err, connection) {
+                if (err) {
+                    console.log(err);
+                    res.send(err);
+                }
+
+                var filePath = 'img/' + req.file.originalname;
+
+                var query = connection.query("INSERT INTO messages (message, created_at, isPhoto) VALUES ('" + filePath + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "', '" + 1 + "')", [filePath, senderId], function(err, rows) {
+
+                    if (err) {
+                        console.log(err);
+                        res.send(err);
+                    } else {
+                    	connection.query("INSERT INTO users_has_messages (user_id, message_id, recipient_id) VALUES ('" + senderId + "', last_insert_id(), '" + recipientId + "')", function(err, rows) {
+						if (err) {
+							console.log(err);
+						} else {
+							console.log('Success querying users_has_messages');
+							connection.release();
+							res.send([rows]);	
+						}
+					});
+                    }
+                });
+                console.log(query.sql);
+            });
+        });
+
+        src.on('error', function(err) {
+            res.send('error');
+        });
+
+
+		
+
+
 	});
 	
 
