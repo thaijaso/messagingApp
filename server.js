@@ -145,6 +145,21 @@ io.on('connection', function(socket) {
 		});		
 	});
 
+	socket.on('sendPhoto', function(data) {
+		console.log('sendPhoto');
+		console.log(data);
+		var fileName = data.fileName;
+		var recipientId = data.recipientId;
+		var filePath = "img/" + fileName;
+		
+		for (socketId in currentConnections) {
+			if (currentConnections[socketId].userId == recipientId) {
+				console.log('sendPhoto: recipient is online');
+				io.to(socketId).emit('updatePhotoMessage', {'filePath': filePath});
+			}
+		}
+	});
+
 	socket.on('userWentOffline', function(data) {
 		console.log('userWentOffline: ' + data.userId);
 
