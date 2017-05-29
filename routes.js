@@ -185,7 +185,7 @@ module.exports = (function() {
 //show messages between two people
   router.get('/messages/:senderId/:recipientId', function(req, res) {
     pool.getConnection(function(err, connection) {
-      var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId, created_at AS createdAt ' + 
+      var query = 'SELECT message_id AS messageId, message, users.username AS senderName, users2.username AS recipientName, users.id AS senderId, users2.id AS recipientId, created_at AS createdAt, isPhoto ' + 
             'FROM users ' +
             'JOIN users_has_messages ON users.id = users_has_messages.user_id ' +
             'JOIN users AS users2 ON users2.id = users_has_messages.recipient_id ' +
@@ -220,7 +220,8 @@ module.exports = (function() {
             recipientName: rows[i].recipientName,
             senderId: rows[i].senderId,
             recipientId: rows[i].recipientId,
-            createdAt: dateFormatted
+            createdAt: dateFormatted,
+            isPhoto: rows[i].isPhoto
           };
 
           console.log(message);
@@ -267,7 +268,7 @@ module.exports = (function() {
 
 
 	// post a profile picture
-	router.post('/upload-photo/:userId', upload.single('avatar'), function(req, res) {
+	router.post('/upload-photo/:userId', upload.single('photo'), function(req, res) {
         console.log(req.file);
         var tempPath = req.file.path;
         var targetPath = 'public/img/' + req.file.originalname;
