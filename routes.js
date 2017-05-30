@@ -246,7 +246,7 @@ module.exports = (function() {
 		console.log(recipientId);
 
 		pool.getConnection(function(err,connection) {	
-			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
+			connection.query("INSERT INTO messages (message, created_at) VALUES ('" + message + "', '" + moment().utcOffset(-420).format('YYYY-MM-DD HH:mm:ss') + "')", function(err, rows) {
 				if (err) {
 					console.log(err);
 				} else {
@@ -345,7 +345,7 @@ module.exports = (function() {
         var targetPath = 'public/img/' + req.file.originalname;
 
 
-         var src = fs.createReadStream(tempPath);
+        var src = fs.createReadStream(tempPath);
         var dest = fs.createWriteStream(targetPath);
         src.pipe(dest);
 
@@ -358,7 +358,7 @@ module.exports = (function() {
 
                 var filePath = 'img/' + req.file.originalname;
 
-                var query = connection.query("INSERT INTO messages (message, created_at, isPhoto) VALUES ('" + filePath + "', '" + moment().format('YYYY-MM-DD HH:mm:ss') + "', '" + 1 + "')", [filePath, senderId], function(err, rows) {
+                var query = connection.query("INSERT INTO messages (message, created_at, isPhoto) VALUES ('" + filePath + "', '" + moment().utcOffset(-420).format('YYYY-MM-DD HH:mm:ss') + "', '" + 1 + "')", [filePath, senderId], function(err, rows) {
 
                     if (err) {
                         console.log(err);
@@ -382,16 +382,7 @@ module.exports = (function() {
         src.on('error', function(err) {
             res.send('error');
         });
-
-
-		
-
-
 	});
 	
-
-
 	return router;
-})
-
-();
+})();
