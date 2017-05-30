@@ -17,7 +17,8 @@ var pool = mysql.createPool({
   	host     : 'us-cdbr-iron-east-04.cleardb.net',
   	user     : 'b813a1e61364f2',
   	password : '2628f177',
-  	database : 'heroku_f7a2513ae4d0f1b'
+  	database : 'heroku_f7a2513ae4d0f1b',
+  	charset  : 'utf8mb4'
 });
 
 app.set('views', __dirname + '/views');
